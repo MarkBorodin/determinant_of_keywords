@@ -86,7 +86,8 @@ class KeyWords(object):
         i = str(self.soup.find_all('i'))
         title = str(self.soup.title)
         head = str(self.soup.find_all('head'))
-        tags = h + b + em + i + title + head
+        meta = str(self.soup.find_all('meta'))
+        tags = h + b + em + i + title + head + meta
         self.keywords_in_tags = []
         for word in keywords:
             if word[0] in tags:
@@ -162,29 +163,43 @@ class KeyWords(object):
 
         key_words_tf_idf = get_top_n(tf_idf_score, 10)
 
-        lst = []
+        self.tf_idf_list = []
         for key, value in key_words_tf_idf.items():
             temp = (key, value)
-            lst.append(temp)
+            self.tf_idf_list.append(temp)
 
-        print(f'keywords according to tf idf: {lst}')
-        return lst
+        print(f'keywords according to tf idf: {self.tf_idf_list}')
+        return self.tf_idf_list
 
     def rake_keywords(self):
         """get keywords according to rake"""
         stoppath = "data/stoplists/SmartStoplist.txt"
         rake_object = rake.Rake(stoppath, 3, 3, 4)
-        keywords = rake_object.run(self.primary_text)
-        print("Keywords according to rake:", keywords)
-        return keywords
+        self.keywords_rake_list = rake_object.run(self.primary_text)
+        try:
+            self.keywords_rake_list = self.keywords_rake_list[:self.number_of_keywords]
+        except:
+            pass
+        print("Keywords according to rake:", self.keywords_rake_list)
+        return self.keywords_rake_list
 
     def rake_phrase(self):
         """get phrases according to rake"""
         rake_object = rake.Rake(self.stoppath)
         phrase = rake_object.run(self.primary_text)
-        first_ten = phrase[:10]
-        print(f'phrases according to rake: {first_ten}')
-        return first_ten
+        self.phrase_rake_list = phrase[:self.number_of_keywords]
+        print(f'phrases according to rake: {self.phrase_rake_list}')
+        return self.phrase_rake_list
+
+    def all_methods_keywords(self):
+        tf_idf_keywords_list = [word[0] for word in self.tf_idf_list]
+        most_frequently_used_words_list = [word[0] for word in self.most_common]
+        rake_keywords_list = [word[0] for word in self.keywords_rake_list]
+        all_words = tf_idf_keywords_list + most_frequently_used_words_list + rake_keywords_list
+        self.most_likely_keywords_list = set([word for word in all_words if word in tf_idf_keywords_list and
+                                              word in most_frequently_used_words_list and word in rake_keywords_list])
+        print(self.most_likely_keywords_list)
+        return self.most_likely_keywords_list
 
 
 if __name__ == '__main__':
@@ -206,7 +221,7 @@ if __name__ == '__main__':
     tf_idf_keywords = key_words.keywords_tf_idf()
 
     # tf_idf_keywords on the page, which are also contained in main_tags tags
-    key_words.check_for_presence_in_main_tags(tf_idf_keywords)
+    tf_idf_keywords_in_tags = key_words.check_for_presence_in_main_tags(tf_idf_keywords)
 
     # tf_idf_keywords on the page, which are also contained in site name
     key_words.check_by_site_name(tf_idf_keywords)
@@ -219,7 +234,7 @@ if __name__ == '__main__':
     most_frequently_used_words = key_words.most_frequently_used_words()
 
     # most_frequently_used_words on the page, which are also contained in main_tags tags
-    key_words.check_for_presence_in_main_tags(most_frequently_used_words)
+    most_frequently_used_words_in_tags = key_words.check_for_presence_in_main_tags(most_frequently_used_words)
 
     # most_frequently_used_words on the page, which are also contained in site name
     key_words.check_by_site_name(most_frequently_used_words)
@@ -229,10 +244,24 @@ if __name__ == '__main__':
     print('keywords and phrases according to rake')
 
     # get keywords according to rake
-    key_words.rake_keywords()
+    rake_keywords = key_words.rake_keywords()
+
+    # keywords according to rake on the page, which are also contained in main_tags tags
+    rake_keywords_in_tags = key_words.check_for_presence_in_main_tags(rake_keywords)
+
+    # keywords according to rake on the page, which are also contained in site name
+    key_words.check_by_site_name(rake_keywords)
 
     print('--------------------------------')
     # get phrases according to rake
     key_words.rake_phrase()
 
-    print(key_words.primary_text)
+    # get keywords that are common to all methods (tf_idf, most_frequently_used_words, rake keywords)
+    keywords_that_are_common_to_all_methods = key_words.all_methods_keywords()
+
+    print('--------------------------------')
+    print('keywords from all methods that are in the main tags')
+    keywords_from_all_methods_that_are_in_the_main_tags = set(
+        tf_idf_keywords_in_tags + most_frequently_used_words_in_tags + rake_keywords_in_tags
+                                                            )
+    print(keywords_from_all_methods_that_are_in_the_main_tags)
