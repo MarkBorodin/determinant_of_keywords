@@ -1,34 +1,30 @@
-# INSTALL_APP
+# RAKE
+---
 
+A Python implementation of the Rapid Automatic Keyword Extraction (RAKE) algorithm as described in: Rose, S., Engel, D., Cramer, N., & Cowley, W. (2010). Automatic Keyword Extraction from Individual Documents. In M. W. Berry & J. Kogan (Eds.), Text Mining: Theory and Applications: John Wiley & Sons.
 
-### Setup
+The source code is released under the MIT License.
 
-clone repository:
-```
-git remote add origin https://github.com/MarkBorodin/determinant_of_keywords.git
-```
-move to folder "determinant_of_keywords":
-```
-cd determinant_of_keywords
-```
+## Installing rake
 
-to install the required libraries, run on command line:
-```
-pip install -r requirements.txt
-```
+To install rake as a package, run:
 
-to get keywords from some site, run in the command line:
+`python setup.py install`
 
+## Example use
+
+```python
+from nlp_rake import rake
+
+stoppath = 'data/stoplists/SmartStoplist.txt'
+
+rake_object = rake.Rake(stoppath, 5, 3, 4)
+
+sample_file = open("data/docs/fao_test/w2167e.txt", 'r', encoding="iso-8859-1")
+text = sample_file.read()
+
+keywords = rake_object.run(text)
+
+# 3. print results
+print("Keywords:", keywords)
 ```
-python main.py your_url number_of_keywords
-```
-
-for example:
-
-```
-python main.py https://www.babylon-webdesign.ch/ 3
-```
-
-if you do not enter the number of keywords - the default value is 5
-
-### Finish
