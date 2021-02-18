@@ -4,7 +4,7 @@ import string
 import sys
 from collections import Counter
 from operator import itemgetter
-
+from api import searchVolumePuller
 import requests
 import spacy
 from bs4 import BeautifulSoup
@@ -350,3 +350,27 @@ if __name__ == '__main__':
     print('--------------------------------')
     print('keywords from all methods with jaccard')
     keywords_jaccard = key_words.check_jaccard(keywords_from_all_methods_that_are_in_the_main_tags)
+
+    # API TEST volumes
+    # print('--------------------------------')
+    # print('API TEST (https://www.blueclaw.co.uk/2020/04/09/find-keyword-search-volumes-for-free-using-python-and-the-adwords-api/)')
+    # CLIENT_ID = ''
+    # CLIENT_SECRET = ''
+    # REFRESH_TOKEN = ''
+    # DEVELOPER_TOKEN = ''
+    # CLIENT_CUSTOMER_ID = ''
+    #
+    # # you need to insert here the result obtained from any method
+    # keyword_list = keywords_jaccard
+    #
+    # volume_puller = searchVolumePuller(CLIENT_ID,
+    #                                    CLIENT_SECRET,
+    #                                    REFRESH_TOKEN,
+    #                                    DEVELOPER_TOKEN,
+    #                                    CLIENT_CUSTOMER_ID)
+    #
+    # adwords_client = volume_puller.get_client()
+    #
+    # targeting_service = volume_puller.get_service('TargetingIdeaService', adwords_client)
+    #
+    # kw_sv_df = volume_puller.get_search_volume(targeting_service, keyword_list)
