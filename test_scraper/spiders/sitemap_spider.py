@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from scrapy.http import Request
 from scrapy.spiders import SitemapSpider
-from main import KeyWordsForScrapy
+from main import KeyWords
 from test_scraper.items import Subpage, Home_Page
 
 
@@ -100,8 +100,9 @@ class MySpider(SitemapSpider):
             f"""INSERT INTO keywords (subpage, tf_idf_keywords, tf_idf_keywords_in_tags, tf_idf_keywords_in_url, 
             most_frequently_used_words, most_frequently_used_words_in_tags, most_frequently_used_words_in_url,
             rake_keywords, rake_keywords_in_tags, rake_keywords_in_url, rake_phrases, 
-            keywords_that_are_common_to_all_methods, keywords_from_all_methods_that_are_in_the_main_tags)
-                              VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", (
+            keywords_that_are_common_to_all_methods, keywords_from_all_methods_that_are_in_the_main_tags, 
+            keywords_gensim, keywords_jaccard)
+                              VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", (
                 subpage_id,
                 str(self.item['tf_idf_keywords']),
                 str(self.item['tf_idf_keywords_in_tags']),
@@ -115,6 +116,8 @@ class MySpider(SitemapSpider):
                 str(self.item['rake_phrases']),
                 str(self.item['keywords_that_are_common_to_all_methods']),
                 str(self.item['keywords_from_all_methods_that_are_in_the_main_tags']),
+                str(self.item['keywords_gensim']),
+                str(self.item['keywords_jaccard']),
             )
         )
         self.connection.commit()
@@ -168,16 +171,16 @@ class MySpider(SitemapSpider):
         super().close(self, reason)
 
     def get_keywords(self):
+        """method for getting keywords"""
         # get object. The first argument is url. The second argument is the number of keywords
-        key_words = KeyWordsForScrapy(self.html, self.url)
+        key_words = KeyWords(html=self.html, url=self.url)
         key_words.start()
+
+        self.item = dict()
 
         print('--------------------------------')
         ########################################
         print('keywords according to tf idf')
-
-        self.item = dict()
-
         # get keywords according to tf idf
         self.item['tf_idf_keywords'] = key_words.keywords_tf_idf()
 
@@ -221,13 +224,37 @@ class MySpider(SitemapSpider):
         # get phrases according to rake
         self.item['rake_phrases'] = key_words.rake_phrase()
 
+        # get phrases according to gensim
+        print('--------------------------------')
+        print('keywords according to gensim')
+        self.item['keywords_gensim'] = key_words.gensim()
+
+        # keywords according to gensim, which are also contained in main_tags tags
+        self.item['keywords_according_to_gensim_in_tags'] = key_words.check_for_presence_in_main_tags(
+            self.item['keywords_gensim']
+        )
+
+        print('--------------------------------')
+        print('common words for all methods')
         # get keywords that are common to all methods (tf_idf, most_frequently_used_words, rake keywords)
-        self.item['keywords_that_are_common_to_all_methods'] = key_words.all_methods_keywords()
+        self.item['keywords_that_are_common_to_all_methods'] = key_words.common_words_for_all_methods()
+
+        print('--------------------------------')
+        print('keywords from all methods')
+        # get keywords from all methods (tf_idf, most_frequently_used_words, rake keywords)
+        self.item['keywords_from_all_methods'] = key_words.all_methods_keywords()
 
         print('--------------------------------')
         print('keywords from all methods that are in the main tags')
-        self.item['keywords_from_all_methods_that_are_in_the_main_tags'] = set(
+        self.item['keywords_from_all_methods_that_are_in_the_main_tags'] = list(set(
             self.item['tf_idf_keywords_in_tags'] + self.item['most_frequently_used_words_in_tags'] +
-            self.item['rake_keywords_in_tags']
-        )
+            self.item['rake_keywords_in_tags'] + self.item['keywords_according_to_gensim_in_tags']
+        ))
         print(self.item['keywords_from_all_methods_that_are_in_the_main_tags'])
+
+        # get phrases according to gensim
+        print('--------------------------------')
+        print('keywords from all methods with jaccard')
+        self.item['keywords_jaccard'] = key_words.check_jaccard(
+            self.item['keywords_from_all_methods_that_are_in_the_main_tags']
+        )

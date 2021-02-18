@@ -123,23 +123,25 @@ class DB(object):
                     );''')
 
         self.cur.execute('''CREATE TABLE IF NOT EXISTS keywords
-                            (
-                            id SERIAL PRIMARY KEY,
-                            subpage TEXT,
-                            tf_idf_keywords TEXT,
-                            tf_idf_keywords_in_tags TEXT,
-                            tf_idf_keywords_in_url TEXT,
-                            most_frequently_used_words TEXT,
-                            most_frequently_used_words_in_tags TEXT,
-                            most_frequently_used_words_in_url TEXT,
-                            rake_keywords TEXT,
-                            rake_keywords_in_tags TEXT,
-                            rake_keywords_in_url TEXT,
-                            rake_phrases TEXT,
-                            keywords_that_are_common_to_all_methods TEXT,
-                            keywords_from_all_methods_that_are_in_the_main_tags TEXT,
-                            FOREIGN KEY (subpage) REFERENCES Subpage (id) ON DELETE CASCADE
-                            );''')
+                    (
+                    id SERIAL PRIMARY KEY,
+                    subpage TEXT,
+                    tf_idf_keywords TEXT,
+                    tf_idf_keywords_in_tags TEXT,
+                    tf_idf_keywords_in_url TEXT,
+                    most_frequently_used_words TEXT,
+                    most_frequently_used_words_in_tags TEXT,
+                    most_frequently_used_words_in_url TEXT,
+                    rake_keywords TEXT,
+                    rake_keywords_in_tags TEXT,
+                    rake_keywords_in_url TEXT,
+                    rake_phrases TEXT,
+                    keywords_that_are_common_to_all_methods TEXT,
+                    keywords_from_all_methods_that_are_in_the_main_tags TEXT,
+                    keywords_gensim TEXT,
+                    keywords_jaccard TEXT,
+                    FOREIGN KEY (subpage) REFERENCES Subpage (id) ON DELETE CASCADE
+                    );''')
 
         self.connection.commit()
 
